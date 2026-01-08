@@ -1,0 +1,21 @@
+# Node modules (REMOVE THIS FROM GIT)
+node_modules/
+
+# Environment variables
+.env
+
+# Virtual environments
+venv/
+myvenv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS / editor noise
+.DS_Store
+.vscode/
+.idea/
+
+# Streamlit
+.streamlit/
