@@ -1,119 +1,164 @@
-# TalentScout
+# TalentScout — Hiring Assistant 
 
-A clean, modern platform to connect job seekers with recruiters and help organizations discover top talent faster.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Status: Active](https://img.shields.io/badge/status-active-brightgreen.svg)]
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-active-brightgreen.svg)]
+A secure, opinionated Streamlit-based AI assistant for conducting structured technical interviews and capturing candidate data. The app uses Hugging Face Inference API to run a conversational model, stores transcripts and extracted candidate summaries in MongoDB, and is driven by a system prompt defined in `prompt.py`.
 
-## Table of Contents
+This README is tailored to the current `app.py` implementation and explains required environment variables, how the app behaves, how data is stored, and how to run it locally.
 
-- [Overview](#overview)
+Table of contents
 - [Features](#features)
-- [Built With](#built-with)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Configuration](#configuration)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
+- [How it works](#how-it-works)
+- [Requirements](#requirements)
+- [Environment variables (.env)](#environment-variables-env)
+- [Quick start (local)](#quick-start-local)
+- [Development notes & important details](#development-notes--important-details)
+- [Data model (MongoDB)](#data-model-mongodb)
+- [Security & privacy notes](#security--privacy-notes)
 - [Contributing](#contributing)
 - [License](#license)
-- [Contact](#contact)
 
-## Overview
-
-TalentScout is a lightweight recruitment platform designed to simplify hiring: post jobs, review applications, manage interviews, and match qualified candidates to roles using configurable workflows.
-
-This repository contains the web application and API components required to run TalentScout locally and in production.
+---
 
 ## Features
 
-- Job posting and management
-- Candidate profiles and searchable resumes
-- Application tracking and status workflows
-- Interview scheduling and notes
-- Role-based access (admin, recruiter, candidate)
-- Import/export CSV for candidates and jobs
+- Streamlit chat UI for running structured, multi-step technical interviews.
+- Uses Hugging Face InferenceClient (`huggingface_hub`) to perform chat completions.
+- Persists interviews and a JSON-extracted candidate summary to MongoDB.
+- Lightweight UI customizations (dark background, custom chat input styling).
+- Safe exit workflow: type `exit`, `quit`, or `bye` to save and stop the interview.
 
-## Built With
+## How it works (high level)
 
-- Node.js / Express (API)
-- React (Web UI)
-- PostgreSQL (Database)
-- Docker (Development / Deployment)
+1. On start, `app.py` loads a system prompt from `prompt.py` (`SYSTEM_PROMPT`) and places it in the session messages.
+2. User interacts via the Streamlit chat input. Each user message is appended to `st.session_state.messages`.
+3. On every user input, the app sends the conversation (messages) to the Hugging Face Inference API using `InferenceClient.chat_completion`.
+4. The assistant reply is shown, appended to session state, and — when the assistant signals interview completion — the app extracts candidate details (via a second chat completion using a JSON extraction prompt) and stores both the extraction and full chat history to MongoDB.
+5. Typing `exit`/`quit`/`bye` triggers saving the interview and stops the app.
 
-## Getting Started
+## Requirements
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+- Python 3.9+
+- A Hugging Face API token with access to the chosen model
+- A running MongoDB instance (or MongoDB Atlas)
+- Recommended packages:
+  - streamlit
+  - huggingface-hub
+  - pymongo
+  - python-dotenv
+  - certifi
 
-### Prerequisites
+You can install the basic dependencies with:
+```bash
+python -m pip install streamlit huggingface-hub pymongo python-dotenv certifi
+```
 
-- Node.js (>=16)
-- npm or yarn
-- Docker & Docker Compose (optional, recommended for local DB)
+(Optionally add these to a `requirements.txt` for reproducible installs.)
 
-### Installation
+## Environment variables (.env)
 
-1. Clone the repo
+The app reads configuration from environment variables. Create a `.env` file in the repository root (or set env vars in your environment). Example values are shown in `.env.example` (file included in this repo).
 
-   ```bash
-   git clone https://github.com/JK110/TalentScout.git
-   cd TalentScout
-   ```
+Key variables used by `app.py`:
+- HF_TOKEN — Hugging Face API token (string)
+- HF_MODEL_ID — Hugging Face model id used by `InferenceClient` (example: `"gpt-4o-mini"` or any chat-capable model you have access to)
+- MONGO_URI — MongoDB connection URI (example: `mongodb+srv://user:pass@cluster0.mongodb.net/?retryWrites=true&w=majority`)
 
-2. Install dependencies for server and client
+See the provided `.env.example` for a template.
 
-   ```bash
-   cd server && npm install
-   cd ../client && npm install
-   ```
+## Quick start (local)
 
-3. Create a .env file for the server (see .env.example)
+1. Clone the repository
+```bash
+git clone https://github.com/JK110/TalentScout.git
+cd TalentScout
+```
 
-4. Start the app (development)
+2. Create and edit `.env` (or copy `.env.example`)
+```bash
+cp .env.example .env
+# edit .env to set HF_TOKEN, HF_MODEL_ID, MONGO_URI
+```
 
-   ```bash
-   # from repository root
-   docker-compose up   # optional: starts DB and services
+3. Install dependencies
+```bash
+python -m pip install -r requirements.txt  # if present
+# or
+python -m pip install streamlit huggingface-hub pymongo python-dotenv certifi
+```
 
-   # or run services individually
-   cd server && npm run dev
-   cd ../client && npm start
-   ```
+4. Add a `prompt.py` that defines `SYSTEM_PROMPT` (required)
+```python
+# prompt.py (example)
+SYSTEM_PROMPT = "You are an AI interviewer. Ask for candidate details and then technical questions..."
+```
+The app will show an error and stop if `prompt.py` is missing.
 
-### Configuration
+5. Run the Streamlit app
+```bash
+streamlit run app.py
+```
 
-- Copy `.env.example` to `.env` in the `server` directory and update values for database connection, JWT secret, and other environment-specific settings.
-- For production, configure a proper Postgres instance and set appropriate env variables.
+6. Open the UI in the browser (default: http://localhost:8501). The sidebar shows interview progress, tips, and status.
 
-## Usage
+## Development notes & important details
 
-- Open the web UI at http://localhost:3000 (or the port configured in the client .env)
-- Use the API at http://localhost:4000/api (or configured server port)
+- SSL certificates are patched via `certifi`:
+  app sets `SSL_CERT_FILE = certifi.where()` for secure TLS connections to MongoDB and external APIs.
+- The app caches the MongoDB collection using `@st.cache_resource` for efficient reuse.
+- The app maintains a session-scoped `st.session_state.messages` list containing the system message, assistant prompts, and user answers.
+- The app detects interview completion when the assistant's reply contains phrases like:
+  - "Thank you for your time"
+  - "recruitment team will review"
+  - "Good luck"
+  When detected, it triggers extraction and saves the interview automatically.
+- Exit flow: if the user types `exit`, `quit`, or `bye` the app saves the interview and stops.
 
-## Project Structure
+## Data model (MongoDB)
 
-- /client — React web application
-- /server — Express API and background workers
-- /migrations — database migrations
-- /docs — design, API specs, and architecture notes
+Saved document structure (approximate):
+- timestamp: Date
+- status: "completed" (string)
+- candidate_summary: JSON produced by the extraction step. The intended shape is:
+
+```json
+{
+  "Name": "",
+  "Email": "",
+  "Phone": "",
+  "Education": "",
+  "Experience": "",
+  "Tech_Stack": "",
+  "Technical_Interview": [{"Question": "", "Candidate_Answer": ""}]
+}
+```
+
+- full_chat_history: the full list of conversation messages (system/assistant/user)
+
+Mongo collection used: `talentscout_db.candidates` (this is created/used by `app.py` via the provided `MONGO_URI`).
+
+## Security & privacy notes
+
+- Candidate data (names, email, phone, resumes, answers) is personally identifiable information (PII). Treat the database and model inputs/outputs as sensitive.
+- Do not commit secrets to the repository. Keep `HF_TOKEN` and `MONGO_URI` in environment variables or a local `.env` that is excluded from Git.
+- Carefully review your Hugging Face model's privacy and retention policies. Some hosted models may log requests.
+- For production use consider:
+  - Using an encrypted/managed database (e.g., MongoDB Atlas) with IP allowlists.
+  - Rotating API keys and storing secrets in a secure secret manager.
+  - Adding authentication and role-based access to the Streamlit UI (not included in `app.py`).
+
+## Troubleshooting
+
+- If `prompt.py` is missing you will see an error in the UI and the app will stop.
+- If the app cannot connect to MongoDB, ensure `MONGO_URI` is valid and reachable from your machine.
+- If Hugging Face returns auth errors, ensure `HF_TOKEN` is valid and `HF_MODEL_ID` is a model your token can use.
 
 ## Contributing
 
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -m "Add my feature"`
-4. Push to the branch: `git push origin feature/my-feature`
-5. Open a pull request describing your changes
-
-Please follow existing code style and include tests for new features.
+- Please open issues for bugs and feature requests.
+- For code changes: fork, create a feature branch, add tests where applicable, and open a pull request with a clear description.
 
 ## License
 
-This repository is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-Project maintained by JK110. For questions or support, open an issue or reach out via GitHub.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
