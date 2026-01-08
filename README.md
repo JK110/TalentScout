@@ -1,5 +1,7 @@
-🧠 TalentScout AI – Hiring Assistant Chatbot
-📌 Project Overview
+****🧠 TalentScout AI – Hiring Assistant Chatbot****
+
+
+📌** Project Overview**
 
 TalentScout AI is an AI-powered hiring assistant designed to conduct structured, fair, and skill-based technical interviews through a conversational interface.
 
@@ -19,15 +21,15 @@ This project demonstrates the practical application of LLMs, prompt engineering,
 
 Follow these steps to run the application locally.
 
-1️⃣ Clone the Repository
-git clone https://github.com/your-username/TalentScout-AI.git
-cd TalentScout-AI
+**1️⃣ Clone the Repository**
+git clone https://github.com/JK110/TalentScout.git
+cd TalentScout
 
-2️⃣ Create and Activate Virtual Environment
+**2️⃣ Create and Activate Virtual Environment**
 python -m venv myvenv
 
 
-Windows
+**Windows**
 
 myvenv\Scripts\activate
 
@@ -36,10 +38,10 @@ Mac/Linux
 
 source myvenv/bin/activate
 
-3️⃣ Install Dependencies
+**3️⃣ Install Dependencies**
 pip install -r requirements.txt
 
-4️⃣ Setup Environment Variables
+**4️⃣ Setup Environment Variables**
 
 Create a .env file in the project root:
 
@@ -47,7 +49,7 @@ HF_TOKEN=your_huggingface_api_token
 HF_MODEL_ID=your_model_id
 MONGO_URI=your_mongodb_connection_string
 
-5️⃣ Run the Application
+**5️⃣ Run the Application**
 streamlit run app.py
 
 
@@ -55,7 +57,7 @@ The app will be available at:
 
 http://localhost:8501
 
-🚀 Usage Guide
+**🚀 Usage Guide**
 
 Open the application in your browser.
 
@@ -85,23 +87,23 @@ The interview is automatically saved in MongoDB
 
 Candidate can exit safely using exit, quit, or bye
 
-💡 Note:
+**💡 Note:**
 No webcam, screen recording, or invasive monitoring is used. The system focuses purely on skill evaluation.
 
-🛠 Technical Details
+**🛠 Technical Details**
 📚 Libraries & Tools Used
 
-Streamlit – Frontend UI and chat interface
+**Streamlit** – Frontend UI and chat interface
 
-Hugging Face Inference API – LLM-powered responses
+**Hugging Face Inference API** – LLM-powered responses
 
-PyMongo – MongoDB database integration
+**PyMongo** – MongoDB database integration
 
-Python-dotenv – Environment variable management
+**Python-dotenv** – Environment variable management
 
-Certifi – Secure TLS/SSL database connections
+**Certifi** – Secure TLS/SSL database connections
 
-🤖 Model Details
+**🤖 Model Details**
 
 Uses a Hugging Face-hosted Large Language Model (LLM)
 
@@ -115,15 +117,15 @@ Technical question generation
 
 Structured data extraction
 
-🏗 Architecture Overview
-User (Browser)
-   ↓
+**🏗 Architecture Overview**
+      User (Browser)
+            ↓
 Streamlit UI (Chat Interface)
-   ↓
+            ↓
 LLM (Hugging Face Inference API)
-   ↓
+            ↓
 Structured Data Extraction (Prompt-based)
-   ↓
+            ↓
 MongoDB (Candidate Records)
 
 
@@ -137,7 +139,7 @@ Technical questions & answers
 
 Timestamp and interview status
 
-🧩 Prompt Design Strategy
+**🧩 Prompt Design Strategy**
 
 Prompt engineering is a core part of this project.
 
@@ -183,7 +185,7 @@ Maintainability
 
 Clean database records
 
-🚧 Challenges & Solutions
+**🚧 Challenges & Solutions**
 ❗ Challenge 1: Extracting Structured Data from Free-Text Chat
 
 Problem:
@@ -236,7 +238,7 @@ No prompt changes
 
 No database logic changes
 
-✅ Future Enhancements
+**✅ Future Enhancements**
 
 Recruiter/Admin dashboard
 
@@ -248,7 +250,9 @@ Role-based interview flows
 
 Deployment on Streamlit Cloud / AWS / Docker
 
-📄 License
+**📄 License**
 
 This project is for educational and demonstration purposes.
 You are free to extend and customize it.
+
+[Live demo]([https://myportfolio.com](https://talentscout-ai-hiringassistant.streamlit.app/))
